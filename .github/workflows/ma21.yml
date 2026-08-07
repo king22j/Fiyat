@@ -1,0 +1,35 @@
+name: Günlük Steam Envanter Raporu
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # Her sabah 09:00 (Türkiye saati)
+  workflow_dispatch: # Manuel çalıştırma butonu (Test için)
+
+permissions:
+  contents: write # Geçmiş fiyatları history.json'a yazabilmesi için izin
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repoyu Klonla
+        uses: actions/checkout@v4
+      
+      - name: Python Kurulumu
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          
+      - name: Gerekli Kütüphaneleri Yükle
+        run: pip install requests
+        
+      - name: Python Betiğini Çalıştır
+        env:
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+          STEAM_ID: ${{ secrets.STEAM_ID }}
+        run: python tracker.py
+        
+      - name: Yeni Verileri Kaydet (Geçmiş için)
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Günlük envanter verisi güncellendi"
